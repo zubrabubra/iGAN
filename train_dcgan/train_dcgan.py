@@ -117,7 +117,20 @@ n_epochs = 0
 n_examples = 0
 t = time()
 
-for epoch in range(niter+niter_decay):
+import glob
+models_stored = glob.glob('%s/disc_params_*' % model_dir)
+start_epoch = 0
+if len(models_stored) > 0:
+	models_stored.sort()
+	last_model = models_stored[len(models_stored) - 1]
+	#load models
+	train_dcgan_utils.load_model(disc_params, last_model)
+	train_dcgan_utils.load_model(gen_params, last_model.replace('disc', 'gen'))
+	start_epoch = int(last_model[-3:])
+
+print('Starting from epoch %s' % start_epoch)
+
+for epoch in range(start_epoch, niter+niter_decay):
     for imb, in tqdm(tr_stream.get_epoch_iterator(), total=ntrain / args.batch_size):
         imb = train_dcgan_utils.transform(imb, nc=nc)
         zmb = floatX(np_rng.uniform(-1., 1., size=(len(imb), nz)))
